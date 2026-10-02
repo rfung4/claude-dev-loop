@@ -1,0 +1,31 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS ships bash 3.2 - the scripts must run there too
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install shellcheck
+        if: runner.os == 'macOS'
+        run: brew install shellcheck
+      - name: Shellcheck
+        run: shellcheck install.sh scripts/setup-docs.sh
+      - name: Bash version
+        run: bash --version | head -1
+      - name: Install test dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Pytest
+        run: pytest -q
