@@ -1,6 +1,7 @@
 ---
 description: Pre-implementation gate review of a development plan/spec — verifies the plan's claims against the codebase, then checks quality, security, scope creep, docs-structure compliance, and task routing. Use after /init-dev and before any code is written, or when the user asks whether a plan is ready, sound, or over-engineered.
 argument-hint: <feature> [--focus=all|security|quality|scope]
+model: opus
 effort: high
 ---
 

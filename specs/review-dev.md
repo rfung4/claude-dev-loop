@@ -50,6 +50,14 @@ a model that has not seen the planning reasoning judges the plan on its own term
 This mirrors the Writer/Reviewer split — a fresh context reviews better because it
 is not biased toward what it just produced.
 
+The command pins `model: opus` (with `effort: high`). The subagent inherits the
+session's model, and plans are mostly written on Fable, so reviews were mostly Fable
+grading Fable: the same model wrote and reviewed 68 of 78 plans (2026-09-07 → 10-05).
+A fixed Opus reviewer removes that for the common case, covers the inline path too,
+and costs about half a Fable review ($1.59 vs $3.24 median). Opus-written plans are
+still reviewed by Opus; fresh context carries that case, and a conditional
+"different model" rule was not worth the branch.
+
 ### 2. Verification before judgement
 
 Every high-value finding in the recorded history came from reading the repository,
