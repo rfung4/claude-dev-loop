@@ -121,6 +121,7 @@ Mode detection (inline vs mid-session) is a judgment call on conversation length
 
 | Situation | Line says |
 |---|---|
+| Next task was already attempted at `opus · xhigh` and its `Verify:` still fails (PROGRESS.md or the reconciliation shows it) | `fable · high`, marked `escalated: task N failed Verify on opus · xhigh`; the run is that one task, fresh context. Overrides the task's `Route:` — Anthropic's "Fable when Opus 5.5 at higher effort still falls short", the one Fable rule with independent support (`context-agentic.md` → Model Routing, recheck 2026-10-11) |
 | Next task has `Route: {tier} · {effort}` | that model and effort, `from task N's Route:` |
 | Next task has `Route: {tier}` only | that tier plus the tier's default effort from `context-agentic.md` → Effort = thinking mode (Sonnet medium; Opus medium, high for review/security; Fable high) |
 | No `Route:` on the next task | a tier derived from its `Verify:` line per `context-agentic.md` → Model Routing, marked `derived from task N's Verify: — SPEC carries no Route: line` |

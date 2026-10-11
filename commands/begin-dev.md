@@ -189,8 +189,11 @@ With `--check`, skip the briefing in every mode — print readiness + gaps to th
 **The `Model / effort:` line is mandatory in both modes** — inline and handoff, every time, no
 conditional. Derive it, never omit it: from the next task's `Route:` when it has one; otherwise
 from its `Verify:` line per `~/.claude/claude-dev-loop/context/context-agentic.md` → Model Routing
-(runnable + mechanical → value tier; no runnable check → strong model), saying in the line that it
-was derived. A `Route:` carrying no effort takes that tier's default effort from the same file
+(runnable + mechanical → value tier; keystone → opus xhigh; Verify checks only shape → fable), saying
+in the line that it was derived. **Escalation overrides the Route:** when PROGRESS.md or the
+reconciliation shows the next task was already attempted at `opus · xhigh` and its `Verify:` still
+fails, the line is `fable · high`, marked `escalated: task N failed Verify on opus · xhigh`, and the
+run is that one task in a fresh context. A `Route:` carrying no effort takes that tier's default effort from the same file
 (sonnet medium · opus medium, high for review/security · fable high). Name the model by its CLI **alias** (`sonnet`/`opus`/`fable`), never a versioned id — an alias always launches the latest model in that tier. A task marked manual / owned by the user gets no route — a model line for a human step is noise.
 
 **The `Run:` line** extends forward from the next task over every task the session should take:

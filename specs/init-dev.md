@@ -312,6 +312,8 @@ been a Decision.
 
 **`Route:` rules.** `{tier} · {effort}` — write both; tier-only routes are why `/begin-dev` handoffs had to fall back to a tier default for the effort half of their model/effort line. Derive the tier from the Verify line per `context-agentic.md` → Model Routing and the effort from the same file's Effort = thinking mode table, raising it off the default only where the task's reasoning (not its typing) warrants it. A task whose Verify is prose-only cannot route below the workhorse tier.
 
+**Keystones and Fable.** A keystone is a large task whose interfaces at least three later tasks build on, where the SPEC fixes *what* but leaves *how* to the implementer — the engine of a feature, not its removals or wiring. Tag it by appending `· keystone` to the task title (at most two per plan) and route it `opus · xhigh`, not Fable: with a runnable check to iterate against, Opus 5.5 matches or beats Fable 5.1 at ~⅓ the cost per task (recheck 2026-10-11, `context-agentic.md` → Model Routing). Fable is for the task whose Verify can only check shape — a mapping table's row count, a prompt's length cap — not whether the judgment is right; route that `fable · high`. Never write `fable · max`. Before this rule the table had no row that reached Fable for implementation, and Fable was routed to one task across 99 SPECs.
+
 **`Sessions:` is gone.** The session split is computed by `/begin-dev` at resume time from the `Route:` lines, when it is actionable.
 
 ### 9. Update INDEX Files

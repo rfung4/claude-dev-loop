@@ -242,7 +242,13 @@ Flag:
 - a task routed below the workhorse tier whose `Verify:` is prose-only
 - security/auth/ACL/migration-surface tasks on the value tier
 - high/xhigh effort on mechanical work (effort is for reasoning, not typing)
-- Fable on auth-adjacent tasks — the safeguard classifier reroutes them anyway
+- a keystone task (large, ≥3 later tasks build on its interfaces, tagged `· keystone`
+  by `/init-dev`) routed at anything but `opus · xhigh` — Fable included: with a
+  runnable check, Opus 5.5 matches or beats Fable 5.1 at ~⅓ the cost per task
+- a task whose `Verify:` checks only shape, not correctness (design, prompt/contract
+  text, a migration that can't be re-run), routed below Fable without a stated
+  reason — nothing downstream catches it
+- `fable · max` anywhere — Fable scores lower at `max` than at `xhigh`
 - a legacy `Sessions:` header — Observation; `/begin-dev` computes the split now
 - **routing inherited from an earlier dev doc** rather than derived from these tasks
 

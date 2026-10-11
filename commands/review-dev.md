@@ -120,7 +120,9 @@ deliverables mapped to promotion targets.
 **Routing** — `Route:` lines follow `context-agentic.md` → Model Routing and are
 derived from each task's `Verify:`. Flag: a task routed below the workhorse tier
 with a prose-only Verify (nothing downstream will catch a cheap model's plausible-wrong
-output); security/migration tasks on the value tier; Fable on auth-adjacent work;
+output); security/migration tasks on the value tier; a keystone task (large, ≥3 later
+tasks build on it) routed at anything but `opus · xhigh`; a task whose Verify checks
+only shape, not correctness, below Fable with no stated reason; `fable · max` anywhere;
 routing **inherited from an earlier dev doc** instead of derived here. A `Sessions:`
 header is legacy — note it as an Observation; `/begin-dev` computes the split now.
 Missing `Route:` lines are an Observation. Routing in spec text switches nothing.
