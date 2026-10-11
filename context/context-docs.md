@@ -21,7 +21,7 @@ Library, not a command. Read when deciding where a piece of documentation belong
 | Got bitten by something | `notes/{topic}.md` (flat; `**Severity:**` header) |
 | Evaluating options, no decision yet | `research/{topic}.md` (local) |
 | Decision made, ready to build | `/init-dev {feature}` (or `--light` for small multi-step work) |
-| Feature complete | `/close-dev` → promote + archive |
+| Feature complete (before the PR) | `/close-dev` → promote + archive; commit the promotions with the feature |
 | Process / runbook | `ops/{process}.md` |
 | API patterns | `api/conventions.md` |
 | Schema change | `schema/{entity}.md` + update its INDEX |

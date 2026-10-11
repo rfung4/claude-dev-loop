@@ -1,5 +1,5 @@
 ---
-description: Close out finished development work — promote deliverables to permanent docs/, write a completion report, archive the dev doc. Use when a feature is done and tests pass, or the user says they're finished with a dev doc. Confirm the feature name before running.
+description: Close out finished development work — promote deliverables to permanent docs/, write a completion report, archive the dev doc. Use when a feature is done and tests pass — on the feature branch, before the PR — or the user says they're finished with a dev doc. Confirm the feature name before running.
 argument-hint: <feature> [--skip-report] [--skip-tests] [--partial] [--force] [--dry-run]
 effort: medium
 ---
@@ -8,7 +8,9 @@ effort: medium
 
 Complete a development effort: promote documentation, generate completion report, archive files.
 
-**Final step:** `/init-dev` → `/review-dev` → [implement] → `/close-dev`
+**Workflow:** `/init-dev` → `/review-dev` → [implement] → `/close-dev` → commit → PR
+
+Run it on the feature branch **before** the PR: promotions stay uncommitted so they go in the feature's PR, and a `missing` criterion can still block the merge. Closing after the merge is what spawns docs-only follow-up PRs.
 
 ## What It Does
 
@@ -31,7 +33,9 @@ Complete a development effort: promote documentation, generate completion report
 ## Process
 
 1. Locate development item (`{arg}/INDEX.md`; fall back to `{arg}/SPEC.md` for `--light` features)
-2. Pre-flight validation (sources exist, targets valid)
+2. Pre-flight validation (sources exist, targets valid). If the feature already merged — HEAD is
+   in the remote default branch and nothing outside `docs/` is uncommitted — say so in one line
+   (promotions will need their own commit) and continue
 3. Run every `Verify:` in SPEC.md (via COMMANDS.md) and the `## End-to-end check`. Any failure → stop unless `--force`
 4. **Compliance pass — fresh subagent, never inline.** Input: SPEC.md acceptance
    criteria + task list, and `git diff <base>..HEAD` (base = branch point or the
@@ -40,7 +44,7 @@ Complete a development effort: promote documentation, generate completion report
    names. Correctness and scope only — *a reviewer asked for gaps will find some;
    style is not a finding.* Missing criterion → stop unless `--partial`.
    Out-of-scope changes → listed in the report, not blocked
-5. Promote deliverables (`create` or `merge`)
+5. Promote deliverables (`create` or `merge`) — leave them uncommitted for the feature's commit
 6. Update status to 🟢
 7. Generate completion report (includes verify results + compliance table)
 8. Archive to `.archive/`

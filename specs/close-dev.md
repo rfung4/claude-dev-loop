@@ -4,13 +4,25 @@ Complete a development effort by promoting documentation to permanent locations,
 
 **Workflow:**
 ```
-[research notes] → /init-dev --from-research → /review-dev → [implement] → /close-dev
-                   /init-dev                  → /review-dev → [implement] → /close-dev
+[research notes] → /init-dev --from-research → /review-dev → [implement] → /close-dev → commit → PR
+                   /init-dev                  → /review-dev → [implement] → /close-dev → commit → PR
                                                                              ↓
                                                                docs/ (permanent)
                                                                report/ (tracking)
                                                                .archive/ (backup)
 ```
+
+### When to run
+
+On the feature branch, before the PR. The loop used to commit, then close, so
+promotions were written after the feature PR merged and needed a PR of their own: in
+one repo, 8 of 42 merged PRs over two months were docs-only, each trailing the `fix/` PR
+for the same issue by 40 min–3 h (one fix got two). Closing first fixes that, and gives the
+compliance pass something to gate — after the merge, `missing` blocks nothing.
+
+Promotions are left uncommitted; commit them with the feature. Report,
+archive and `development/INDEX.md` are gitignored, so nothing else needs committing. If
+PR review reopens the work, move the dev doc back from `.archive/` and close again.
 
 ## What This Command Does
 
@@ -60,6 +72,10 @@ Pre-flight validation...
 
 All validations passed.
 ```
+
+**Already merged?** If HEAD is in the remote default branch and nothing outside `docs/` is
+uncommitted, the feature shipped before close ran. Say so in one line — `Feature already
+merged — promotions below need their own commit.` — and continue. A warning, never a block.
 
 ### 2b. Verify
 
@@ -160,7 +176,8 @@ Execute promotions per the deliverables table:
 | `merge` | Append with separator |
 | `merge-at-marker(X)` | Replace between markers |
 
-Update each deliverable status to 🟢 with date.
+Update each deliverable status to 🟢 with date. Don't commit — the promotions go in
+the feature's commit.
 
 ### 4. Update Target INDEX Files
 
@@ -364,7 +381,7 @@ The report is AI-generated from:
 | PROGRESS.md | Time entries, daily notes |
 | COMMANDS.md | Test commands run |
 | Deliverable files | Content summaries |
-| Git log | Files changed (if available) |
+| `git diff <base>` incl. uncommitted | Files changed |
 
 **Report includes:**
 - What was built (summary)
