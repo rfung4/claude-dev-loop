@@ -4,7 +4,7 @@ Complete a development effort by promoting documentation to permanent locations,
 
 **Workflow:**
 ```
-[research notes] → /init-dev --from-research → /review-dev → [implement] → /close-dev → commit → PR
+research/{topic}.md → /init-dev --from-research → /review-dev → [implement] → /close-dev → commit → PR
                    /init-dev                  → /review-dev → [implement] → /close-dev → commit → PR
                                                                              ↓
                                                                docs/ (permanent)
@@ -79,7 +79,7 @@ merged — promotions below need their own commit.` — and continue. A warning,
 
 ### 2b. Verify
 
-Run every task `Verify:` line from SPEC.md (COMMANDS.md collects them) and the
+Run every task `Verify:` line from SPEC.md (COMMANDS.md collects them on legacy docs; `/init-dev` no longer generates it) and the
 `## End-to-end check`. These were written by the plan, so they are the contract:
 a task whose Verify fails is not done, whatever the checkbox says. Legacy dev
 docs without `Verify:` lines fall back to the COMMANDS.md pytest line:
@@ -134,6 +134,8 @@ Continue? [y/N]:
 ```
 
 ### 2c. Compliance pass
+
+**Replaced.** The compliance subagent ran 31 times and stopped nothing. The review that caught a real break (a PR that would have broken a shipped client app) was a review of the diff, not of criteria coverage. Step 4 now invokes the `code-review` skill at `high` on the branch diff and keeps one thing from this design: the list of changed files no task names. The text below is the record of what it was.
 
 The mirror of `/review-dev`: that gate checks the plan against the repo before
 code; this checks the code against the plan after. Nothing else in the loop
@@ -249,11 +251,11 @@ Create `docs/report/{feature}.md`:
 
 ---
 
-## Compliance
+## Review findings
 
-| Criterion | Status | Evidence |
-|-----------|--------|----------|
-| User can read/write preferences via API | implemented | tests/api/test_preferences.py::test_roundtrip |
+| Finding | Severity | Resolved |
+|---------|----------|----------|
+| none | — | — |
 
 Changed outside the plan: none
 
@@ -316,9 +318,9 @@ Remove the entry from the tracking table:
 # After: (row removed)
 ```
 
-### 8. Run Validation
+### 8. Run Validation (dropped)
 
-Check that the docs/ INDEX files are current — no row or link still points at the archived feature.
+The docs-structure check that ran here is gone: 22 of its 23 invocations in five weeks came from this step, and an audit measured its catches at zero.
 
 ### 9. Report Summary
 

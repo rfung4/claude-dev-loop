@@ -13,7 +13,7 @@
 | Phase 1 | 🔴 Not Started | {description} |
 | Phase 2 | 🔴 Not Started | {description} |
 
-**See also:** [Progress Log](PROGRESS.md) | [Commands](COMMANDS.md)
+**See also:** [Progress Log](PROGRESS.md)
 
 ---
 
@@ -82,8 +82,9 @@ of truth; this file links to it. Current task is the **Current task** line near 
 development/{feature}/
 ├── INDEX.md       # This file - status, decisions, deliverables (READ FIRST; tasks live in SPEC.md)
 ├── SPEC.md        # Single technical spec (architecture, API, schema combined)
-├── PROGRESS.md    # Daily log (optional, for multi-day work)
-└── COMMANDS.md    # Validation commands (optional)
+└── PROGRESS.md    # Daily log (optional, for multi-day work)
+
+COMMANDS.md is legacy: no longer generated. Verify: lines live in SPEC.md.
 ```
 
 **Avoid:**
@@ -95,4 +96,4 @@ development/{feature}/
 **Why:** A 5+ file structure costs ~8K tokens before any code is read. Keep INDEX.md self-contained (~2-3KB) so LLM can understand feature without reading everything.
 
 Create only the files you need. Delete unused entries from Deliverables table.
-PROGRESS.md and COMMANDS.md are scaffolded but not promoted to docs/.
+PROGRESS.md is scaffolded but not promoted to docs/.

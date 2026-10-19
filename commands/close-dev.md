@@ -14,7 +14,7 @@ Run it on the feature branch **before** the PR: promotions stay uncommitted so t
 
 ## What It Does
 
-1. **Verify** - Run the SPEC's `Verify:` lines + end-to-end check; then a fresh-context compliance pass of the diff against the acceptance criteria
+1. **Verify** - Run the SPEC's `Verify:` lines + end-to-end check; then review the branch diff with the `code-review` skill and list every changed file no task names
 2. **Promote** - Move deliverables to permanent docs/
 3. **Report** - Generate completion summary in `docs/report/`
 4. **Archive** - Move development files to `.archive/`
@@ -36,19 +36,18 @@ Run it on the feature branch **before** the PR: promotions stay uncommitted so t
 2. Pre-flight validation (sources exist, targets valid). If the feature already merged — HEAD is
    in the remote default branch and nothing outside `docs/` is uncommitted — say so in one line
    (promotions will need their own commit) and continue
-3. Run every `Verify:` in SPEC.md (via COMMANDS.md) and the `## End-to-end check`. Any failure → stop unless `--force`
-4. **Compliance pass — fresh subagent, never inline.** Input: SPEC.md acceptance
-   criteria + task list, and `git diff <base>..HEAD` (base = branch point or the
-   first commit after PROGRESS "Planned"). Output, per criterion: implemented /
-   partial / missing, with the evidence line; plus every changed file no task
-   names. Correctness and scope only — *a reviewer asked for gaps will find some;
-   style is not a finding.* Missing criterion → stop unless `--partial`.
-   Out-of-scope changes → listed in the report, not blocked
+3. Run every `Verify:` in SPEC.md and the `## End-to-end check` (COMMANDS.md's pytest line only on a legacy doc whose SPEC carries no per-task `Verify:`). Any failure → stop unless `--force`
+4. **Diff review.** Invoke the `code-review` skill (Skill tool, level `high`) on
+   `git diff <base>..HEAD` (base = branch point or the first commit after PROGRESS
+   "Planned"; uncommitted changes included). It is a fresh context by construction.
+   Take its correctness findings; then list every changed file no task names.
+   A Blocker-grade finding → stop unless `--force`. Out-of-plan files → listed in the
+   report, not blocked. Replaces a compliance subagent that stopped
+   nothing in 31 runs; the review that caught a real break was a diff review
 5. Promote deliverables (`create` or `merge`) — leave them uncommitted for the feature's commit
 6. Update status to 🟢
-7. Generate completion report (includes verify results + compliance table)
+7. Generate completion report (includes verify results + review findings)
 8. Archive to `.archive/`
-9. Check that docs/ INDEX files are current
 
 ## Report Contents
 
@@ -57,7 +56,7 @@ Generated in `docs/report/{feature}.md`:
 - Key decisions with rationale
 - Files changed
 - Deliverables promoted
-- Verify results (per task + e2e) and the compliance table (criterion → implemented / partial / missing; out-of-scope changes)
+- Verify results (per task + e2e), the code-review findings and how each was resolved, and files changed outside the plan
 - Lessons learned
 - Time tracking (if PROGRESS.md has entries)
 
@@ -70,7 +69,7 @@ Found: development/user-preferences/ (2 deliverables)
 
 Pre-flight... ✓
 Verify (6 tasks + e2e)... ✓
-Compliance (fresh subagent)... 4/4 criteria implemented; 1 file outside plan: src/utils/fmt.py (noted)
+Code review (high)... 0 findings; 1 file outside plan: src/utils/fmt.py (noted)
 
 Promoting:
   ✓ design.md → architecture/user-prefs.md

@@ -4,7 +4,7 @@ Create a development structure in `docs/development/` with optional AI-powered i
 
 **Workflow:**
 ```
-[research notes] → /init-dev auth --from-research → /review-dev → [implement] → /close-dev
+research/{topic}.md → /init-dev auth --from-research → /review-dev → [implement] → /close-dev
                    /init-dev auth                  → /review-dev → [implement] → /close-dev
                                                               ↓
                                                    /init-dev --refresh (updates existing)
@@ -14,8 +14,8 @@ Create a development structure in `docs/development/` with optional AI-powered i
 
 - `$1` - Feature name in kebab-case (required)
 - `--from-research` - Source from `docs/research/{name}.md` instead of context
-- `--light` - SPEC.md only (+ PROGRESS.md if multi-session); no INDEX.md / COMMANDS.md
-- `--refresh` - Regenerate SPEC.md for an existing dev doc, preserving PROGRESS.md, checkmarks, `Route:`/`Verify:` lines; reconciles COMMANDS.md's `VERIFY` block against the rewritten plan
+- `--light` - SPEC.md only (+ PROGRESS.md if multi-session); no INDEX.md
+- `--refresh` - Regenerate SPEC.md for an existing dev doc, preserving PROGRESS.md, checkmarks, `Route:`/`Verify:` lines; on a legacy doc, reconciles COMMANDS.md's `VERIFY` block against the rewritten plan
 
 ## Modes
 
@@ -28,7 +28,7 @@ Create development doc from current conversation context. Use when you already k
 ```
 
 **When to use:**
-| Write a research note first | Use `/init-dev` |
+| Write `docs/research/{topic}.md` | Use `/init-dev` |
 |------------------------|-----------------|
 | Exploring options | Decision already made |
 | Uncertain about approach | Clear implementation path |
@@ -57,6 +57,8 @@ The plan is the artifact. Creates `SPEC.md` only (add `PROGRESS.md` if the work 
 ```
 
 **Don't invoke at all** when the diff fits in one sentence. Planning is overhead there (Anthropic best-practices: "if you could describe the diff in one sentence, skip the plan").
+
+**Size ceiling, decided inside the command.** The one-sentence rule asks the human not to invoke the command, and the audits found it ignored: about a third of planned work was overkill, the median SPEC was 41 KB against a 10 KB guideline nothing enforced, and 4 of 14 plans in one week were never implemented. The field moved the decision into the tool after a quick look (superpowers v7, BMAD 6.12, Compound Engineering's output tiers). So: after the codebase analysis and the draft task list, a SPEC is ≤10 tasks and ≤10 KB; over either, the command stops and either splits the feature or writes one line under `## Summary` saying why this one earns more. A draft of ≤2 tasks is reported as the "don't invoke" case and the command offers to do the work instead. `/review-dev` checks the ceiling (F. docs-structure compliance).
 
 ---
 
@@ -160,13 +162,14 @@ Always a directory:
 docs/development/{feature}/
 ├── INDEX.md          # From template. Status, decisions, deliverables. LINKS to SPEC's tasks — never copies them
 ├── SPEC.md           # The plan. Always present
-├── PROGRESS.md       # From template. **Current task:** line under the H1
-└── COMMANDS.md       # From template. Collects every task's Verify: + the e2e check
+└── PROGRESS.md       # From template. **Current task:** line under the H1
+
+COMMANDS.md is not generated: the SPEC's `Verify:` lines are the collection, `/close-dev` runs them from there, and no field framework keeps a second copy. Legacy docs keep theirs.
 ```
 
 `--light`: `SPEC.md` only (+ `PROGRESS.md` if multi-session). `/review-dev`, `/begin-dev` and `/close-dev` all tolerate a missing INDEX.md.
 
-**Full structure is earned, not default.** Emit INDEX/PROGRESS/COMMANDS only when the work
+**Full structure is earned, not default.** Emit INDEX/PROGRESS only when the work
 spans more than one session or has a deliverable to promote into `docs/`; otherwise `--light`.
 Ticket-shaped work (one ticket, one sitting) is the `--light` case. Rationale: of 147 open dev docs
 in several real projects, 62 sat untouched for 30+ days — unearned structure is not inert,
@@ -266,7 +269,6 @@ content once the grill has run.
   - File: `src/models/user.py:45`
   - Details: Add `preferences = Column(JSON, default={})`
   - Verify: `pytest tests/unit/test_user_model.py::test_preferences_default -x` (new test, write it first)
-  - Route: sonnet · medium
 
 Commit after each task passes its Verify.
 
@@ -308,13 +310,13 @@ settled in the room — needs the client, prod data, or a third party. Each carr
 **blocked on:** tag. Anything answerable by the two people in the session should have
 been a Decision.
 
-**`Verify:` rules.** It is a command or a named test path. The planner writes it; the implementing session runs it — it does not invent its own check. Prose is not a Verify ("runs twice with zero diff" → `scripts/x.py && git diff --exit-code kb/refs`). Every `Verify:` is copied into COMMANDS.md, inside the `<!-- MERGE_START(VERIFY) -->` / `<!-- MERGE_END(VERIFY) -->` markers — that block is machine-owned (see Refresh mode); anything outside the markers is hand-written and never rewritten. Evidence: supplied, correct checks move agent success rates by ~25pp on SWE-bench; agent-written tests move nothing (`~/.claude/claude-dev-loop/docs/why.md`).
+**`Verify:` rules.** It is a command or a named test path. The planner writes it; the implementing session runs it — it does not invent its own check. Prose is not a Verify ("runs twice with zero diff" → `scripts/x.py && git diff --exit-code kb/refs`).  Evidence: supplied, correct checks move agent success rates by ~25pp on SWE-bench; agent-written tests move nothing (`~/.claude/claude-dev-loop/docs/why.md`).
 
-**`Route:` rules.** `{tier} · {effort}` — write both; tier-only routes are why `/begin-dev` handoffs had to fall back to a tier default for the effort half of their model/effort line. Derive the tier from the Verify line per `context-agentic.md` → Model Routing and the effort from the same file's Effort = thinking mode table, raising it off the default only where the task's reasoning (not its typing) warrants it. A task whose Verify is prose-only cannot route below the workhorse tier.
+**`Route:` rules.** A task runs on the session's model and carries no `Route:` line; that is the normal case. A `Route:` marks an exception only: `fable · high` for a task whose Verify can check shape but not correctness (below). The per-task tier derivation is gone: over four weeks Sonnet was 0.4% of spend while about half of all tasks were routed to it, the two 2026 routing studies with numbers credit the handoff artifact rather than the tier choice, and no field framework keeps per-task model lines in a plan file.
 
-**Keystones and Fable.** A keystone is a large task whose interfaces at least three later tasks build on, where the SPEC fixes *what* but leaves *how* to the implementer — the engine of a feature, not its removals or wiring. Tag it by appending `· keystone` to the task title (at most two per plan) and route it `opus · xhigh`, not Fable: with a runnable check to iterate against, Opus 5.5 matches or beats Fable 5.1 at ~⅓ the cost per task (recheck 2026-10-11, `context-agentic.md` → Model Routing). Fable is for the task whose Verify can only check shape — a mapping table's row count, a prompt's length cap — not whether the judgment is right; route that `fable · high`. Never write `fable · max`. Before this rule the table had no row that reached Fable for implementation, and Fable was routed to one task across 99 SPECs.
+**Keystones and Fable.** A keystone is a large task whose interfaces at least three later tasks build on, where the SPEC fixes *what* but leaves *how* to the implementer — the engine of a feature, not its removals or wiring. Tag it by appending `· keystone` to the task title (at most two per plan); the session runs it at `/effort xhigh` on its own model, not on Fable: with a runnable check to iterate against, Opus 5.5 matches or beats Fable 5.1 at ~⅓ the cost per task (as of 2026-10, `context-agentic.md` → Model Routing). Fable is for the task whose Verify can only check shape — a mapping table's row count, a prompt's length cap — not whether the judgment is right; route that `fable · high`. Never write `fable · max`. Before this rule the table had no row that reached Fable for implementation, and Fable was routed to one task across 99 SPECs.
 
-**`Sessions:` is gone.** The session split is computed by `/begin-dev` at resume time from the `Route:` lines, when it is actionable.
+**`Sessions:` is gone.** `/begin-dev` computes the `Run:` line at resume time; it stops only at approval stops and blockers, never at a model change.
 
 ### 9. Update INDEX Files
 
@@ -355,7 +357,6 @@ Files:
   - INDEX.md (populated from {source})
   - SPEC.md (implementation plan)
   - PROGRESS.md
-  - COMMANDS.md
 
 Deliverables configured:
   - SPEC.md (design section) -> architecture/{feature}.md (create)
@@ -405,7 +406,6 @@ Generated:
   - INDEX.md (populated from context)
   - SPEC.md (6 tasks, 4 files)
   - PROGRESS.md
-  - COMMANDS.md
 
 Updated: development/INDEX.md
 
@@ -436,7 +436,6 @@ Generated:
   - INDEX.md (populated from research)
   - SPEC.md (8 tasks, 5 files)
   - PROGRESS.md
-  - COMMANDS.md
 
 Updated:
   - research/INDEX.md (marked promoted)
@@ -455,7 +454,7 @@ Next: /review-dev auth-system
 Analyzing codebase...
   - Found: src/clients/base.py:88 (retry loop), tests/unit/test_retry.py
 
-Created: development/fix-retry-backoff/SPEC.md (3 tasks, each with Verify: + Route:)
+Created: development/fix-retry-backoff/SPEC.md (3 tasks, each with Verify:)
 No INDEX/COMMANDS — the SPEC is the artifact.
 
 Next: /review-dev fix-retry-backoff
@@ -474,8 +473,8 @@ Rewrites SPEC.md for an existing dev doc when scope shifted. PROGRESS.md, comple
 ARCHIVE_DIR="docs/.archive/$(date +%Y%m%d_%H%M%S)" && mkdir -p "$ARCHIVE_DIR" && cp docs/development/{feature}/SPEC.md docs/development/{feature}/COMMANDS.md "$ARCHIVE_DIR/" 2>/dev/null
 ```
 
-### COMMANDS.md reconciliation
-COMMANDS.md is not regenerated, but its `VERIFY` block must not drift from the rewritten SPEC. `/close-dev` executes the `Verify:` lines in SPEC.md and treats COMMANDS.md as the collection of them (`~/.claude/claude-dev-loop/specs/close-dev.md` → 2b. Verify), so drift is not usually a false green — with two exceptions that make it matter:
+### COMMANDS.md reconciliation (legacy docs only)
+COMMANDS.md is no longer generated; this section applies to docs that still carry one. It is not regenerated, but its `VERIFY` block must not drift from the rewritten SPEC. `/close-dev` executes the `Verify:` lines in SPEC.md and treats COMMANDS.md as the collection of them (`~/.claude/claude-dev-loop/specs/close-dev.md` → 2b. Verify), so drift is not usually a false green — with two exceptions that make it matter:
 
 1. **The fallback path.** A dev doc whose SPEC carries no per-task `Verify:` lines — 134 of 168 in the field — has close-out fall back to COMMANDS.md's pytest line. There the file *is* the gate, and a stale block is a green close-out that checked the wrong thing.
 2. **Human and session use.** COMMANDS.md is what `/begin-dev`'s Commands block, `--run-tests`, and the user copy from. Dead commands for dropped tasks and missing commands for new ones waste exactly the session the handoff was meant to speed up.
@@ -494,7 +493,7 @@ Tasks appended by `/begin-dev --next` are ordinary tasks and are indistinguishab
 |------|--------|
 | `--from-research` | Source from research doc instead of context |
 | `--light` | SPEC.md only; no INDEX/COMMANDS |
-| `--refresh` | Rewrite SPEC.md in place (archived first), preserving progress and per-task lines; reconcile COMMANDS.md `VERIFY` block |
+| `--refresh` | Rewrite SPEC.md in place (archived first), preserving progress and per-task lines; reconcile a legacy COMMANDS.md `VERIFY` block |
 
 ---
 
@@ -503,14 +502,14 @@ Tasks appended by `/begin-dev --next` are ordinary tasks and are indistinguishab
 - Feature INDEX: `~/.claude/claude-dev-loop/templates/development-feature.md`
 - Plan: `~/.claude/claude-dev-loop/templates/development-plan.md`
 - Progress log: `~/.claude/claude-dev-loop/templates/development-progress.md`
-- Commands: `~/.claude/claude-dev-loop/templates/development-commands.md`
+- Commands: `~/.claude/claude-dev-loop/templates/development-commands.md` (legacy; no longer generated)
 
 ---
 
 ## Relationship to Other Commands
 
 ```
-[research notes]     -> research/{topic}.md (exploration)
+research/{topic}.md   (hand-written exploration)
         |
         v
 /init-dev --from-research -> development/{feature}/ (promotion + planning)
@@ -540,9 +539,9 @@ Tasks appended by `/begin-dev --next` are ordinary tasks and are indistinguishab
 - Research files are archived after promotion (recoverable from `.archive/`)
 - Always creates directory structure (no single-file option)
 - Deliverables table is the key artifact - defines what gets promoted
-- PROGRESS.md and COMMANDS.md are operational, never promoted
+- PROGRESS.md is operational, never promoted
 - Use `/init-dev --refresh` to regenerate SPEC.md on existing development docs
 - Run `/review-dev` before implementation for security checks
 - Task `Verify:` lines are the load-bearing part of the plan — a runnable check per task, written by the planner. `/review-dev` treats a prose-only Verify as a Warning; `/close-dev` runs them.
-- Task `Route:` lines (`{tier} · {effort}`, both written) follow `~/.claude/claude-dev-loop/context/context-agentic.md` → Model Routing and are derived from the Verify line. Defaults only — confirmed at `/review-dev`, turned into a session plan by `/begin-dev` at resume time. They never switch models themselves; the model is chosen at session launch (`claude --model`, `/model`).
+- A task carries no `Route:` line unless it is an exception (`fable · high` for a shape-only Verify; `· keystone` for the engine task). The model is chosen at session launch (`claude --model`, `/model`) and a task runs on it; see `~/.claude/claude-dev-loop/context/context-agentic.md` → Model Routing.
 - Commit after each task passes its Verify. One task per commit keeps a bad step recoverable.

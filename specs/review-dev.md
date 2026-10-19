@@ -22,19 +22,19 @@ This is the gate that catches them **before** coding begins.
 ## Workflow Position
 
 ```
-[research notes] → /init-dev → /review-dev → [implement] → /close-dev
+research/{topic}.md → /init-dev → /review-dev → [implement] → /close-dev
                        ↑            ↑
               /init-dev --refresh ──┘  (re-plan in place after blockers)
 ```
 
-Implementation should not start until the verdict is Ready or Ready with notes.
+Implementation starts once the Blockers list is empty or folded in. (The Ready / Ready with notes / Blocked verdict line was dropped; see Output.)
 
 ---
 
 ## Design rationale
 
 Four choices in the command exist because the previous design measurably failed.
-Measured 2026-07-28 over 130 recorded `/review-dev` invocations and ~200 dev-doc
+Measured over 130 recorded `/review-dev` invocations and ~200 dev-doc
 folders across five repos.
 
 ### 1. Fresh context, not the planning session
@@ -52,7 +52,7 @@ is not biased toward what it just produced.
 
 The command pins `model: opus` (with `effort: high`). The subagent inherits the
 session's model, and plans are mostly written on Fable, so reviews were mostly Fable
-grading Fable: the same model wrote and reviewed 68 of 78 plans (2026-09-07 → 10-05).
+grading Fable: the same model wrote and reviewed 68 of 78 plans in a four-week sample.
 A fixed Opus reviewer removes that for the common case, covers the inline path too,
 and costs about half a Fable review ($1.59 vs $3.24 median). Opus-written plans are
 still reviewed by Opus; fresh context carries that case, and a conditional
@@ -143,7 +143,7 @@ toolkit was cloned.
 | An existing test named as a guard | Open it; confirm the assertion exists |
 
 Each claim resolves to **verified**, **wrong**, or **unverifiable**, with evidence
-quoted inline. Wrong → Blocker. Unverifiable → Blocked verdict, because the plan
+quoted inline. Wrong → Blocker. Unverifiable → a Blocker, because the plan
 rests on something nobody can check.
 
 A verified pre-condition is worth converting into a regression test in the plan —
@@ -215,9 +215,9 @@ dependencies, "and related changes".
 
 | Criterion | Threshold |
 |-----------|-----------|
-| File count | ≤ 4 |
+| File count | ≤ 3 (INDEX, SPEC, PROGRESS; COMMANDS.md is legacy) |
 | INDEX.md | < 3KB, self-contained |
-| Total folder | < 10KB |
+| SPEC.md | ≤ 10 tasks and ≤ 10 KB, or one line in its Summary saying why this feature earns more. Median SPEC in real use was 41 KB against the old 10 KB folder rule, which nothing enforced |
 | Deliverables | every one mapped to a promotion target |
 
 Content quality: INDEX.md understandable without SPEC.md; SPEC.md consolidated
@@ -225,49 +225,34 @@ rather than scattered across design/api-changes files; no duplication between th
 
 ### G. Routing
 
-`Route:` lines (`tier · effort`, e.g. `sonnet · medium`; effort optional) are emitted by `/init-dev` per
-`context-agentic.md` → Model Routing and are **derived from each task's `Verify:`**.
-They are defaults confirmed by the human at this gate and turned into a session
-plan by `/begin-dev` at resume time. They never switch models — the model is chosen
-at session launch.
-
-The `Sessions:` header was retired: it pre-computed at plan time a
-decision that is only actionable at a session boundary, and the evidence for
-cost-routing on multi-step coding is thin (no end-to-end study; cheap-executor
-failures cost ~4×). What makes routing down safe is a runnable check on the task,
-so that is now the routing key.
+A task runs on the session's model (`context-agentic.md` → Model Routing).
+`Route:` lines are exception markers: `fable · high` where the task's `Verify:` can check
+shape but not correctness, and `· keystone` on the title of the engine task (at most two)
+so the session runs it at `/effort xhigh`. Everything else carries no `Route:` and that is
+the normal case, not an Observation.
 
 Flag:
 
-- a task routed below the workhorse tier whose `Verify:` is prose-only
-- security/auth/ACL/migration-surface tasks on the value tier
-- high/xhigh effort on mechanical work (effort is for reasoning, not typing)
-- a keystone task (large, ≥3 later tasks build on its interfaces, tagged `· keystone`
-  by `/init-dev`) routed at anything but `opus · xhigh` — Fable included: with a
-  runnable check, Opus 5.5 matches or beats Fable 5.1 at ~⅓ the cost per task
-- a task whose `Verify:` checks only shape, not correctness (design, prompt/contract
-  text, a migration that can't be re-run), routed below Fable without a stated
-  reason — nothing downstream catches it
+- a `Route:` on a task whose Verify is runnable and mechanical — noise; the session's model does it
 - `fable · max` anywhere — Fable scores lower at `max` than at `xhigh`
-- a legacy `Sessions:` header — Observation; `/begin-dev` computes the split now
-- **routing inherited from an earlier dev doc** rather than derived from these tasks
+- a shape-only Verify (design, prompt/contract text, a migration that can't be re-run) with no `fable` route and no stated reason — nothing downstream catches it
+- a legacy `Sessions:` header — Observation
+- **routing inherited from an earlier dev doc** rather than derived from these tasks: a one-off routing instruction propagated verbatim through three consecutive dev docs, each citing the previous, because nothing re-derived it
 
-That last one is not hypothetical: a one-off routing instruction propagated verbatim through three
-consecutive dev docs, each citing the previous, because nothing re-derived it. Treat a routing block that cites
-another dev doc as unreviewed.
-
-Missing `Route:` lines are an Observation, not a blocker.
+Why the per-task tier derivation went: over four weeks Sonnet was 0.4% of
+spend while about half of all tasks were routed to it; the two 2026 routing studies with
+numbers credit the handoff artifact, not the tier choice; no field framework keeps per-task
+model lines in a plan, and the one that tried per-task roles removed them.
 
 ---
 
 ## Output
 
-No score. No standalone report file. Findings, then verdict.
+No score. No verdict line. No standalone report file. Findings; the Blockers list is the verdict.
 
 ```markdown
 # Development Review: {feature}
 
-**Verdict:** Ready | Ready with notes | Blocked
 **Focus:** {all|security|quality|scope}
 **Context read:** {files, or "none"}
 
@@ -294,10 +279,11 @@ No score. No standalone report file. Findings, then verdict.
 
 ## Recommendation
 {next step: proceed, fold warnings, or what must change}
+
+Next: {alias} · {effort} — you are on {model}: {stay | /model {alias} then /effort {effort} | new session: claude --model {alias} --effort {effort}}
 ```
 
-Verdict rules: **Blocked** if any Blocker or any unverifiable claim; **Ready with
-notes** if only Warnings; **Ready** otherwise.
+**No verdict line.** The first review said Blocked in 70 of 71 features, then in 17 of 17 the following week, so the line carried no information and trained the user to ignore it; the Blockers list is the verdict. **One round** by default: 4 of 17 features that week reached round 3 or later, and those rounds spent most of their findings re-checking earlier fold-ins and the plan's own Verify lines (the share of findings citing `Verify:` was 34% in round 1 and did not fall). A second round runs only on request or after a `--refresh`. **Sibling repos:** the one round-4 finding of substance that week (a PR that would break a shipped client app) was found only after the user pointed the reviewer at the sibling checkout, so the Context table now names them. **The footer** closes every review: a planning or review session ending "resume in a fresh session" without naming the model was the single largest source of the user's "model?" questions.
 
 ---
 
@@ -310,7 +296,7 @@ the convention that emerged instead works better:
    review: `**Deny-first (review W2):** red-green the deny cells BEFORE …`.
    Implementation meets the finding where it is relevant, instead of in a document
    it will not reopen.
-2. **One PROGRESS.md line** records date, verdict, and what was fixed.
+2. **One PROGRESS.md line** records date, Blockers/Warnings counts, and what was fixed.
 3. **Blockers that change the plan's shape** go through `/init-dev --refresh`, which
    re-plans in place and preserves `Route:` lines and PROGRESS.md.
 
@@ -337,14 +323,14 @@ Verification (A) and coverage (B) run under every mode. They are what the review
 ```
 /init-dev feature
   ↓
-/review-dev feature            → Blocked
+/review-dev feature            → findings (Blockers / Warnings / Observations)
   ↓
 fold warnings / /init-dev --refresh feature
   ↓
-/review-dev feature            → Ready with notes
-  ↓
 implement → /close-dev feature
 ```
+
+One review round is the default; a second runs only on request or after a `--refresh`.
 
 ---
 

@@ -25,16 +25,16 @@ this session did not touch the plan. What makes the review worth anything is
 
 Read the dev doc FIRST, then `Read` only what its contents trigger. Default is none.
 
-**Never `@`-include these.** `@` expands eagerly and unconditionally, so a
-parenthetical condition beside one does nothing — every file would load on
-every invocation regardless of `--focus`. Paths are absolute because this
-command runs in project repos, not in the toolkit clone:
+Never `@`-include these: `@` expands eagerly and unconditionally, whatever
+condition sits beside it. Paths are absolute because this command runs in
+project repos, not in the toolkit clone:
 
 | Path | Read when |
 |------|-----------|
 | `~/.claude/claude-dev-loop/context/context-docs.md` | doc structure or promotion is in scope |
 | `~/.claude/claude-dev-loop/context/context-security.md` | auth, ACL, input validation, DB changes — forced by `--focus=security` |
-| `~/.claude/claude-dev-loop/context/context-agentic.md` | agent/subagent design, or `Route:` lines need checking |
+| `~/.claude/claude-dev-loop/context/context-agentic.md` | agent/subagent design, or a `Route:` line needs checking |
+| Sibling repos named in the repo's CLAUDE.md (an iOS app, a frontend, a shared package) | any task changes a route, payload, status code or contract they consume — open the sibling checkout, do not reason about it from this repo |
 
 ## Arguments
 
@@ -69,13 +69,14 @@ Check the plan's assertions against the repo, not against its own prose:
 | "no other caller" / "only used here" | grep the symbol repo-wide |
 | Branch / migration state | `git log`, migration dir — is the stated base real? |
 | An existing test named as a guard | Open it. Does it assert what's claimed? |
+| A contract a sibling repo consumes | Open that repo and grep its callers; a plan that is correct in this repo can still break a shipped client |
 
 Report each as **verified / wrong / unverifiable** with the evidence inline
 (`orders_repo.py:237 — confirms is_archived = False`). A wrong claim
 is a Blocker no matter how good the rest of the plan is; a verified pre-condition
 should become a regression test rather than staying an assumption.
 
-This pass is where the review earns its keep. Do not skip it to save tokens.
+This pass is where the review earns its keep.
 
 ### 3. Coverage
 
@@ -114,18 +115,18 @@ the deny cases first (`context-security.md`).
 **Scope** — future-proofing, an abstraction with one implementation, gold-plating,
 premature optimization, adjacent features that arrived uninvited.
 
-**Docs structure** — ≤4 files, INDEX.md under 3KB and self-contained, under 10KB total,
-deliverables mapped to promotion targets.
+**Docs structure** — SPEC ≤10 tasks and ≤10 KB unless its Summary says in one line why this
+feature earns more (over without a reason → Warning: split or justify); ≤3 files;
+INDEX.md under 3KB and self-contained; deliverables mapped to promotion targets.
 
-**Routing** — `Route:` lines follow `context-agentic.md` → Model Routing and are
-derived from each task's `Verify:`. Flag: a task routed below the workhorse tier
-with a prose-only Verify (nothing downstream will catch a cheap model's plausible-wrong
-output); security/migration tasks on the value tier; a keystone task (large, ≥3 later
-tasks build on it) routed at anything but `opus · xhigh`; a task whose Verify checks
-only shape, not correctness, below Fable with no stated reason; `fable · max` anywhere;
-routing **inherited from an earlier dev doc** instead of derived here. A `Sessions:`
-header is legacy — note it as an Observation; `/begin-dev` computes the split now.
-Missing `Route:` lines are an Observation. Routing in spec text switches nothing.
+**Routing** — a task runs on the session's model; a `Route:` line marks an exception
+only (`context-agentic.md` → Model Routing): `fable · high` where the `Verify:` can check
+shape but not correctness, `· keystone` on the title of the engine task (at most 2) so the
+session runs it at `/effort xhigh`. Flag: a `Route:` on a task whose Verify is runnable and
+mechanical (noise); `fable · max` anywhere; a shape-only Verify with no `fable` route and no
+stated reason; routing **inherited from an earlier dev doc** instead of derived here.
+Missing `Route:` lines are the normal case, not a finding. A `Sessions:` header is legacy —
+Observation.
 
 **Report only what affects correctness or a stated requirement.** A reviewer asked
 for gaps will always produce some; unbounded findings turn into defensive
@@ -144,13 +145,9 @@ Three severities, no numeric score.
 Each finding carries: location (`file:section`), what is wrong, why it matters, the
 specific fix.
 
-**Verdict** follows from the findings, not from feel:
-
-| Verdict | Condition |
-|---------|-----------|
-| **Blocked** | ≥1 Blocker, or any claim that could not be verified |
-| **Ready with notes** | Warnings only |
-| **Ready** | Neither |
+No verdict line. Ready / Ready with notes / Blocked carried no information — every first
+review in the field said Blocked — so the Blockers list is the verdict: empty means proceed,
+non-empty means fix those and proceed.
 
 ### 6. Land the findings
 
@@ -158,17 +155,26 @@ The review is not a document. Offer, then on the user's go-ahead:
 
 - fold Warnings into SPEC.md as inline notes **at the point they apply**
   (`**Deny-first (review W2):** …`), so implementation meets them in place
-- add one line to PROGRESS.md: date, verdict, what was fixed
+- add one line to PROGRESS.md: date, Blockers/Warnings counts, what was fixed
 - for Blockers that change the plan's shape, `/init-dev --refresh` re-plans in place
   and preserves `Route:` lines and PROGRESS.md
 
 Do not write a standalone review-report file.
 
+**One round.** Once the findings are folded in, implementation starts. A second review runs
+only when the user asks for one or a `--refresh` changed the plan's shape; later rounds in
+the field mostly re-checked earlier fold-ins and the plan's own Verify scaffolding.
+
+**End the reply with the footer `/begin-dev` prints**, naming the model for the next step:
+`Next: {alias} · {effort} — you are on {model}: stay | /model {alias} then /effort {effort} | new session: claude --model {alias} --effort {effort}`.
+A closing that says "resume in a fresh session" without naming the model is the most common
+reason the user has to ask.
+
 ## See Also
 
 - `/init-dev --refresh` — re-plan in place after blockers
 - `/begin-dev` — resume in a fresh session; the natural sibling of this gate
-- `/close-dev` — after implementation; its compliance pass is this review's mirror (diff vs acceptance criteria)
+- `/close-dev` — after implementation; it reviews the branch diff with the `code-review` skill
 - `~/.claude/claude-dev-loop/context/context-security.md` — security principles (library, not a command)
 
 *Full spec: `~/.claude/claude-dev-loop/specs/review-dev.md`*

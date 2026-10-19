@@ -17,5 +17,5 @@ Active exploration and investigation.
 ---
 
 **Commands:**
-- Add a research note as `{topic}.md` in this folder
+- New research doc: write `{topic}.md` here and add a row above
 - `/init-dev {topic} --from-research` - Promote to development
