@@ -2,6 +2,7 @@
 description: Resume development work — reconcile a dev doc against actual repo state, validate readiness, then brief inline (fresh session) or write a /tmp handoff briefing (mid-session); handoff mode writes the evidenced reconciliation back to the dev doc (--sync forces it in any mode, --no-sync reports only), --next appends the next chunk of work as tasks. Use when returning to a project after a break, or when the user asks "where was I", "what's left", or "pick this back up".
 argument-hint: [dev-doc] [--check] [--handoff] [--run-tests] [--sync|--no-sync] [--next "task"]
 effort: medium
+disable-model-invocation: true
 ---
 
 # Begin Development
@@ -14,7 +15,7 @@ Bridge across sessions. Point a context at an existing `docs/development/{featur
 
 ## The footer: every outcome ends with it
 
-Handoff, inline, continue-here, Blocked, Plan exhausted, `--check`: the reply ends with this one line, and nothing replaces it.
+Handoff, inline, continue-here, Blocked, Plan exhausted, `--check`: the reply ends with this one line (or its no-task form below), and nothing replaces it.
 
 ```
 Next: {alias} · {effort} — you are on {model}: {stay, /effort {effort} | /model {alias} then /effort {effort} | new session: claude --model {alias} --effort {effort}}
@@ -24,6 +25,7 @@ Next: {alias} · {effort} — you are on {model}: {stay, /effort {effort} | /mod
 - `{alias}` is the next task's `Route:` tier when it carries one; otherwise the model you are on. An implementation run never goes below `opus`. Aliases only (`sonnet` / `opus` / `fable`), never a versioned id.
 - **Escalation overrides the Route:** when PROGRESS.md or the reconcile shows the next task was already attempted at `opus · xhigh` and its `Verify:` still fails, the line is `fable · high`, new session, marked `escalated: task N failed Verify on opus · xhigh`.
 - When the next step is the user's (an approval, an env step, a question), name the model for the first task after it.
+- **No task left to route** (plan exhausted, or the user's step is the last thing in the plan): the line is `Next: no task queued — {the user's step in a few words, or run /close-dev}`. No model, no effort: the fallback would only echo the current model and an invented effort (`Next: fable · high — you are on fable: stay, /effort high` after the last task closed).
 
 Why: the model line went missing exactly where the old rule did not reach (Blocked replies, pasted kickoffs, closings written by other commands), and inline briefings never said what the session was already running. The footer is the only output rule here with no exception; the evidence is in the spec.
 
@@ -31,7 +33,7 @@ Why: the model line went missing exactly where the old rule did not reach (Block
 
 **A pending question comes first, and a trailing one does not cancel the command.** If the previous turn left a question open, resolve it (or say it is being skipped) before running. If the user's next message arrives within the same minute ("Model?", "yes"), answer it *and* run the command; a `/begin-dev` typed just before a short reply has been swallowed by the reply.
 
-**Context size is not yours to judge.** You cannot see it. If a context-size hook is installed, it puts a `Context is Nk tokens` line in your input once the session passes 300k, and again after each commit past that line. It means: hand off at the next clean stop — a task's passing `Verify:` and its commit — never mid-task. Past 400k, finish the task in hand to its commit, hand off, and start nothing else. Auto-compaction is the backstop, not the trigger.
+**Handoffs are manual.** The user starts one by typing `/begin-dev`; you never run it yourself, never tell the user to hand off because the session feels long, and never stop work to suggest it. Auto-compaction is the backstop.
 
 **Workflow:** `/init-dev` → `/review-dev` → [implement] ⟳ **`/begin-dev`** → [paste the path into a fresh session] → [implement] → `/close-dev`
 
@@ -88,7 +90,7 @@ Surface **drift**: tasks marked done with no code, code written past the plan, u
 | Protected paths | next tasks edit nothing under `.claude/` or settings files | they do — warn: auto mode's self-modification guard blocks those edits, so the session will stall until the user runs them |
 
 Two verdicts end the command early. Both still end with the footer:
-- **Plan exhausted** (every task done, nothing open) → print the verdict and `run /close-dev`. No file.
+- **Plan exhausted** (every task done, nothing open) → print the verdict, then the no-task footer: `Next: no task queued — run /close-dev`. No file.
 - **Blocked** on the user → print the blocker as a question and stop. No file, **unless `--handoff` was passed**: then write the file with the question as the first line under **Owed by you**, so the fresh session opens on the question instead of hitting the wall. Blocked is narrow: the blocker prevents *any* next action (an open ⚫, a missing SPEC, an env step nothing can proceed without). A question that only affects a later task is a Landmine, not a verdict.
 
 Claims about systems the reconcile did not probe — Slack apps, boxes, prod env vars, external dashboards — are **from SPEC, unverified** and are labelled so wherever they appear. Probing is the highest-value thing this command does (it has caught a task already shipped and not fixing the bug, a daemon down with open orders, a merged branch, a parallel session switching the checkout); when a claim decides the next action and can be checked with one ssh/curl/git call, check it.
@@ -146,10 +148,10 @@ line; zero is the common outcome, cap at 3, answers land in `## Decisions`.
 The briefing is composed **after** the write, so it describes state that is already true on disk.
 
 ### 3b. Handoff gate: hand off by default mid-session
-You cannot observe this session's context size or idle time, so do not estimate them; the
-statusline shows the human, and a context-size hook, if installed, shows you. Mid-session the verdict is
-**handoff** unless the next run is **one short task on the model you are running now**, in
-which case continue-here. A `Context is Nk tokens` line in your input settles it: handoff.
+The user ran this command mid-session, so they are asking whether to hand off. You cannot
+observe this session's context size or idle time, so do not estimate them; the statusline
+shows the human. The verdict is **handoff** unless the next run is **one short task on the
+model you are running now**, in which case continue-here.
 
 - **A model change is never a stop.** A task whose `Route:` names another tier runs here on
   this session's model. The one exception is a `fable` escalation (footer rules), which is a
