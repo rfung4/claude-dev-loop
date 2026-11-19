@@ -165,10 +165,17 @@ Do not write a standalone review-report file.
 only when the user asks for one or a `--refresh` changed the plan's shape; later rounds in
 the field mostly re-checked earlier fold-ins and the plan's own Verify scaffolding.
 
-**End the reply with the footer `/begin-dev` prints**, naming the model for the next step:
-`Next: {alias} · {effort} — you are on {model}: stay | /model {alias} then /effort {effort} | new session: claude --model {alias} --effort {effort}`.
-A closing that says "resume in a fresh session" without naming the model is the most common
-reason the user has to ask.
+**The footer goes on the reply that closes the review, never on the step-6 offer.** While the
+offer waits on the user, the next step is theirs, in this session: no footer. Once the fold-in
+lands (or is declined), end with one line naming ONE action, never the list of options:
+
+- same model: `Next: {alias} · {effort} — you are on {model}: stay, /effort {effort}`
+- switch in place: `Next: {alias} · {effort} — you are on {model}: /model {alias} then /effort {effort}`
+- fresh session: `Next: {alias} · {effort} — you are on {model}: new session: claude --model {alias} --effort {effort}`
+
+`{alias}`, escalation and the no-task form follow `/begin-dev`'s footer rules. A closing that
+says "resume in a fresh session" without naming the model is the most common reason the user
+has to ask.
 
 ## See Also
 
