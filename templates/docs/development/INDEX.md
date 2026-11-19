@@ -27,3 +27,4 @@ Active work in progress.
 **Commands:**
 - `/init-dev {feature}` - Create development plan (`--refresh` to update)
 - `/close-dev {feature}` - Complete and archive
+- `/reconcile-dev` - Sweep all dev docs: archive shipped and dead ones, park deferred ones

@@ -39,7 +39,7 @@ cd claude-dev-loop && ./install.sh
 
 | Link | Points at | Why |
 |---|---|---|
-| `~/.claude/commands/{init,review,begin,close}-dev.md` | `commands/` | makes the four commands invocable in every repo |
+| `~/.claude/commands/{init,review,begin,close,reconcile}-dev.md` | `commands/` | makes the commands invocable in every repo |
 | `~/.local/bin/setup-docs` | `scripts/setup-docs.sh` | scaffolds `docs/` in a project |
 | `~/.claude/claude-dev-loop` | this clone | the fixed prefix the commands use to `Read` their specs, context and templates from inside any project |
 
@@ -62,6 +62,12 @@ and installs a local pre-commit hook that stops those local-only docs from being
 | [`/review-dev`](commands/review-dev.md) `<feature>` | After planning, before any code | No report file — verifies the plan's claims against the repo in a fresh context; on your go-ahead, folds findings into SPEC.md where they apply |
 | [`/begin-dev`](commands/begin-dev.md) `[feature]` | Returning to work, or leaving a cluttered session | Reconciles the doc against the repo; in handoff mode writes back evidenced corrections. Then briefs inline or writes a `/tmp` handoff file for a fresh session |
 | [`/close-dev`](commands/close-dev.md) `<feature>` | Every task's `Verify:` passes | Runs the checks, a fresh-context diff-vs-plan compliance pass, promotes deliverables into `docs/`, writes `docs/report/{feature}.md`, moves the dev doc into `docs/.archive/` |
+
+Outside the loop, for the docs that never reached `/close-dev`:
+
+| Command | When | What it writes |
+|---|---|---|
+| [`/reconcile-dev`](commands/reconcile-dev.md) `[--dry-run]` | Dev docs have piled up: features shipped unclosed, plans went quiet | Read-only subagents check each quiet doc against git. Shipped and superseded docs move to `docs/.archive/` on one go-ahead; stalled and never-started ones get one question each (archive, park, keep). Fresh docs are not read |
 
 `--light` (SPEC.md only) is the normal case. Full structure has to be earned: the work spans
 sessions, or it produces a document worth promoting. If the diff fits in one sentence, don't
@@ -198,7 +204,7 @@ fact-checking, and what was cut as a result.
 ## Layout
 
 ```
-commands/    the four slash commands (what the model executes)
+commands/    the four loop commands plus /reconcile-dev (what the model executes)
 specs/       full behavioural spec per command (rationale and edge cases)
 context/     short rule libraries the commands Read on demand
 templates/   dev-doc templates /init-dev fills in; docs/ is the skeleton setup-docs copies

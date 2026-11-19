@@ -21,11 +21,12 @@ def rel(path):
     return path.relative_to(ROOT)
 
 
-def test_four_loop_commands_shipped():
+def test_loop_commands_shipped():
     assert [p.stem for p in COMMANDS] == [
         "begin-dev",
         "close-dev",
         "init-dev",
+        "reconcile-dev",
         "review-dev",
     ]
 
