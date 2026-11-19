@@ -104,6 +104,15 @@ Six of the seven recommendations shipped on 2026-08-23 with the context cut; the
 - **The same audit found `Route:` lines were mostly not acted on.** In 4 of 5 cross-tier
   down-routes the user moved up to Opus rather than down to Sonnet. Routes are advice: the
   resume briefing states them and stops only at a real tier change, where the human decides.
+- **A second audit two weeks later removed per-task routing.** About half of all tasks had been
+  routed to Sonnet, which received 0.4% of spend. A task now runs on the session's model, a
+  `Route:` line marks an exception only, a model change is never a stop, and handoffs are
+  started by the human: only 1 of 94 handoff files had been written unprompted.
+- **The verdict line and the compliance subagent went the same way.** The first review said
+  Blocked in 70 of 71 features, so the Blockers list became the verdict. The compliance pass
+  stopped nothing in 31 runs and was replaced by a fresh-context review of the diff.
+- **`/reconcile-dev` was added for the docs that never reach `/close-dev`.** 182 dev docs were
+  open across the repos using the loop, 123 of them stale.
 
 ## Sources
 
